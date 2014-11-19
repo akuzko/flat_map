@@ -53,5 +53,12 @@ module FlatMap
       attr = :"#{attr}_#{@base.suffix}" if attr != :base && @base.suffixed?
       super
     end
+
+    # Return a hash contining only one (first) message for single key
+    #
+    # @return [Hash]
+    def first_messages
+      Hash[*messages.keys.zip(messages.values.map(&:first)).flatten]
+    end
   end
 end

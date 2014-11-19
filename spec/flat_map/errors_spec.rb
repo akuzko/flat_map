@@ -20,4 +20,11 @@ describe FlatMap::Errors do
     errors.add(:attr, 'an error')
     errors[:attr_foo].should == ['an error']
   end
+
+  specify '#first_messages' do
+    errors.add(:attr, 'first error')
+    errors.add(:attr, 'second error')
+
+    errors.first_messages.should == {:attr_foo => 'first error'}
+  end
 end
