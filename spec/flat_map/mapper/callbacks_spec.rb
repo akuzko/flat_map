@@ -13,22 +13,33 @@ module FlatMap
     end
 
     class SpecMapper < Mapper
-      map :attr_a
+      map :attr_a, :attr_ary
 
       set_callback :save, :before, :set_a
+      set_callback :save, :after, :append_owner
 
       trait :with_b do
         map :attr_b
 
         set_callback :validate, :before, :set_b
+        set_callback :save, :after, :append_trait
 
         def set_b
           self.attr_b = 'before validate'
+        end
+
+        def append_trait
+          attr_ary << 'trait'
         end
       end
 
       def set_a
         self.attr_a = 'before save'
+      end
+
+      def append_owner
+        self.attr_ary ||= []
+        attr_ary << 'owner'
       end
 
       mount :mount,
@@ -63,6 +74,11 @@ module FlatMap
     specify 'save callbacks' do
       mapper.save
       mapper.attr_a.should == 'before save'
+    end
+
+    specify 'traited after save callbacks should run last' do
+      mapper.save
+      mapper.attr_ary.should == ['owner', 'trait']
     end
 
     context 'extension trait and named traits' do

@@ -76,7 +76,7 @@ module FlatMap
     # @return [Boolean]
     def save
       before_res = save_mountings(before_save_mountings)
-      target_res = self_mountings.map{ |mount| mount.shallow_save }.all?
+      target_res = save_self_with_callbacks
       after_res  = save_mountings(after_save_mountings)
 
       before_res && target_res && after_res
@@ -93,7 +93,28 @@ module FlatMap
     #
     # @return [Boolean]
     def shallow_save
-      run_callbacks(:save){ save_target }
+      run_callbacks(:save){ yield }
+    end
+
+    # Takes list of mappers and recursively saves them,
+    # each in a callback block of previous one. In this case,
+    # For chain like mapper1 - mapper2 - mapper3, callback
+    # chain will look like
+    #   mapper1.before_save
+    #     mapper2.before_save
+    #       mapper3.before_save
+    #         here actual usually happens
+    #       mapper3.after_save
+    #     mapper2.after_save
+    #   mapper1.after_save
+    #
+    # @param [Array<FlatMap::Mapper>] mappers
+    # @return [Boolean]
+    def save_self_with_callbacks(mappers = self_mountings)
+      current = mappers.shift
+      current.shallow_save do
+        mappers.present? ? save_self_with_callbacks(mappers) : current.save_target
+      end
     end
 
     # Return +true+ if target was updated.

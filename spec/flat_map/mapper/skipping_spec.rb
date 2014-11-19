@@ -20,6 +20,41 @@ module FlatMap
         end
       end
     end
+
+    class CallbacksSpecMapper < Mapper
+      attr_accessor :values
+
+      trait :first_trait do
+        set_callback :save, :before, :first_before
+        set_callback :save, :after, :first_after
+
+        def first_before
+          values.push 'first_before'
+        end
+
+        def first_after
+          values.push 'first_after'
+        end
+      end
+
+      trait :second_trait do
+        set_callback :save, :before, :second_before
+        set_callback :save, :after, :second_after
+
+        def second_before
+          values.push 'second_before'
+        end
+
+        def second_after
+          values.push 'second_after'
+        end
+      end
+
+      def save_target
+        values.push 'value'
+        false
+      end
+    end
   end
 
   describe 'Skipping' do
@@ -44,6 +79,24 @@ module FlatMap
       mapper.attr_a = 5
       mapper.save
       mapper.attr_b.should == 'b'
+    end
+  end
+
+  describe 'Skipping and callbacks' do
+    let(:mapper){ SkippingSpec::CallbacksSpecMapper.new(OpenStruct.new, :first_trait, :second_trait) }
+
+    before do
+      mapper.values = []
+      mapper.trait(:first_trait).skip!
+    end
+
+    it 'should not overwite main result' do
+      mapper.save.should be_false
+    end
+
+    it 'should handle callbacks chain in right way' do
+      mapper.save
+      mapper.values.should == ['second_before', 'value', 'second_after']
     end
   end
 

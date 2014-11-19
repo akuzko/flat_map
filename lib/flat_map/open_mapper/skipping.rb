@@ -53,7 +53,11 @@ module FlatMap
     #
     # @return [Boolean]
     def shallow_save
-      skipped? || super
+      if skipped?
+        block_given? ? yield : true
+      else
+        super
+      end
     end
 
     # Mark self as used and then delegated to original

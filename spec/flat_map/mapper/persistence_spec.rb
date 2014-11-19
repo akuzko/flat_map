@@ -142,10 +142,10 @@ module FlatMap
         end
       end
 
-      specify '#shallow_save saves target in a save callbacks' do
+      specify '#save_self_with_callbacks saves target in a save callbacks' do
         mapper.should_receive(:run_callbacks).with(:save).and_yield
         mapper.should_receive(:save_target)
-        mapper.shallow_save
+        mapper.save_self_with_callbacks
       end
     end
   end
